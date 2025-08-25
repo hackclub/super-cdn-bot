@@ -99,7 +99,7 @@ app.message(async ({ message, say }) => {
 		const fileId = randomBytes(16).toString("hex");
 		currentFileIDs.push(fileId);
 		fileProxies.set(fileId, file.url_private);
-		const proxyUrl = `${process.env.SERVER_PROTOCOL || "https"}://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/${fileId}/${file.name || 'file'}`;
+		const proxyUrl = `${process.env.SERVER_URL}/${fileId}/${file.name || 'file'}`;
 		return proxyUrl;
 	});
 

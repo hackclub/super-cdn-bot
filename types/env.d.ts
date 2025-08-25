@@ -7,9 +7,7 @@ declare global {
 			CDN_URL: string;
 			CDN_API_KEY: string;
 			HOST_PORT: string;
-			SERVER_PORT: string;
-			SERVER_HOST: string;
-			SERVER_PROTOCOL?: string;
+			SERVER_URL: string;
 		}
 	}
 }
