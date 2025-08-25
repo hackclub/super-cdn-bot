@@ -1,0 +1,21 @@
+{
+	"name": "cdn-bot-private",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@slack/bolt": "^4.4.0",
+		"ky": "^1.9.0",
+		"prettier": "^3.6.2"
+	},
+	"scripts": {
+		"format": "prettier --write .",
+		"lint": "prettier --check ."
+	}
+}
