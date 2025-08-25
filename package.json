@@ -1,5 +1,5 @@
 {
-	"name": "cdn-bot-private",
+	"name": "super-cdn-bot",
 	"module": "index.ts",
 	"type": "module",
 	"private": true,

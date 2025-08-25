@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "cdn-bot-private",
+      "name": "super-cdn-bot",
       "dependencies": {
         "@slack/bolt": "^4.4.0",
         "ky": "^1.9.0",
