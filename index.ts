@@ -22,30 +22,7 @@ const server = serve({
 		const url = new URL(req.url);
 		const pathParts = url.pathname.slice(1).split("/");
 		const fileId = pathParts[0];
-
-		// Handle workflow button endpoint
-		if (url.pathname === "/workflow-button") {
-			return new Response(
-				JSON.stringify({
-					blocks: [
-						{
-							type: "section",
-							text: {
-								type: "mrkdwn",
-								text: "Join the HQ channel (requires membership in prerequisite channel):",
-							},
-						},
-						getJoinHQWorkflowButton(),
-					],
-				}),
-				{
-					headers: {
-						"Content-Type": "application/json",
-					},
-				}
-			);
-		}
-
+		
 		// just here to make typescript happy :P
 		if (!fileId) {
 			return new Response("Invalid file path", { status: 400 });
