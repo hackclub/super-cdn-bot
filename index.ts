@@ -30,11 +30,9 @@ const server = serve({
 
 		const proxy = fileProxies.get(fileId);
 		if (!proxy) {
-			console.log(`Proxy not found for file ID: ${fileId}`);
 			return new Response("File not found", { status: 404 });
 		}
 
-		console.log(`Proxying file ${fileId} from ${proxy}`);
 		fileProxies.delete(fileId);
 
 		try {
