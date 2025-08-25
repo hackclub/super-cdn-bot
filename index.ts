@@ -100,6 +100,7 @@ app.message(async ({ message, say }) => {
 		currentFileIDs.push(fileId);
 		fileProxies.set(fileId, file.url_private);
 		const proxyUrl = `${process.env.SERVER_URL}/${fileId}/${file.name || 'file'}`;
+		console.log(proxyUrl);
 		return proxyUrl;
 	});
 
@@ -144,9 +145,9 @@ app.message(async ({ message, say }) => {
 		});
 	} finally {
 		// clean up the file URLs created on the proxy server
-		for (const id of currentFileIDs) {
-			fileProxies.delete(id);
-		}
+		// for (const id of currentFileIDs) {
+		// 	fileProxies.delete(id);
+		// }
 	}
 });
 
