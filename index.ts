@@ -20,7 +20,13 @@ const server = serve({
 	port: proxyPort,
 	async fetch(req) {
 		const url = new URL(req.url);
-		const fileId = url.pathname.slice(1);
+		const pathParts = url.pathname.slice(1).split('/');
+		const fileId = pathParts[0];
+
+		// just here to make typescript happy :P
+		if (!fileId) {
+			return new Response("Invalid file path", { status: 400 });
+		}
 
 		const proxy = fileProxies.get(fileId);
 		if (!proxy) {
@@ -95,7 +101,7 @@ app.message(async ({ message, say }) => {
 		const fileId = randomBytes(16).toString("hex");
 		currentFileIDs.push(fileId);
 		fileProxies.set(fileId, file.url_private);
-		const proxyUrl = `${process.env.SERVER_PROTOCOL || "https"}://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/${fileId}`;
+		const proxyUrl = `${process.env.SERVER_PROTOCOL || "https"}://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/${fileId}/${file.name || 'file'}`;
 		return proxyUrl;
 	});
 
