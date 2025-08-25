@@ -305,4 +305,37 @@ app.event("app_home_opened", async ({ event, client }) => {
 });
 
 await app.start();
+
+// Set bot presence to online when the bot starts
+try {
+	await app.client.users.setPresence({
+		presence: "auto", // This will show the bot as online/active
+	});
+	console.log("Bot presence set to online");
+} catch (error) {
+	console.error("Error setting bot presence:", error);
+}
+
 console.log("CDN bot is running!");
+
+// Handle graceful shutdown to set presence offline
+const gracefulShutdown = async () => {
+	console.log("Shutting down bot...");
+	try {
+		await app.client.users.setPresence({
+			presence: "away", // This will show the bot as away/offline
+		});
+		console.log("Bot presence set to offline");
+	} catch (error) {
+		console.error("Error setting bot presence to offline:", error);
+	}
+	
+	// Close the server
+	server.stop();
+	process.exit(0);
+};
+
+// Listen for shutdown signals
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGUSR2", gracefulShutdown); // for nodemon restarts
