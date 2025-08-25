@@ -20,8 +20,31 @@ const server = serve({
 	port: proxyPort,
 	async fetch(req) {
 		const url = new URL(req.url);
-		const pathParts = url.pathname.slice(1).split('/');
+		const pathParts = url.pathname.slice(1).split("/");
 		const fileId = pathParts[0];
+
+		// Handle workflow button endpoint
+		if (url.pathname === "/workflow-button") {
+			return new Response(
+				JSON.stringify({
+					blocks: [
+						{
+							type: "section",
+							text: {
+								type: "mrkdwn",
+								text: "Join the HQ channel (requires membership in prerequisite channel):",
+							},
+						},
+						getJoinHQWorkflowButton(),
+					],
+				}),
+				{
+					headers: {
+						"Content-Type": "application/json",
+					},
+				}
+			);
+		}
 
 		// just here to make typescript happy :P
 		if (!fileId) {
@@ -99,7 +122,7 @@ app.message(async ({ message, say }) => {
 		const fileId = randomBytes(16).toString("hex");
 		currentFileIDs.push(fileId);
 		fileProxies.set(fileId, file.url_private);
-		const proxyUrl = `${process.env.SERVER_URL}/${fileId}/${file.name || 'file'}`;
+		const proxyUrl = `${process.env.SERVER_URL}/${fileId}/${file.name || "file"}`;
 		console.log(proxyUrl);
 		return proxyUrl;
 	});
@@ -148,6 +171,133 @@ app.message(async ({ message, say }) => {
 		// for (const id of currentFileIDs) {
 		// 	fileProxies.delete(id);
 		// }
+	}
+});
+
+// Function to get the workflow button JSON (for use in bot description or workflows)
+function getJoinHQWorkflowButton() {
+	return {
+		type: "actions",
+		elements: [
+			{
+				type: "button",
+				text: {
+					type: "plain_text",
+					text: "Join HQ Channel",
+				},
+				action_id: "join_hq_channel",
+				style: "primary",
+			},
+		],
+	};
+}
+
+// warning: everything below this point is vibecoded ai slop
+app.action("join_hq_channel", async ({ ack, body, client }) => {
+	await ack();
+
+	const userId = body.user.id;
+	const sourceChannelId = "G01QNNEUA10"; // hq-hq
+	const targetChannelId = "C09C7L76UMP"; // hq-cdn
+
+	try {
+		// Check if user is in the source channel
+		const members = await client.conversations.members({
+			channel: sourceChannelId,
+		});
+
+		const isInSourceChannel = members.members?.includes(userId);
+
+		if (!isInSourceChannel) {
+			// User is not in the required channel
+			await client.chat.postEphemeral({
+				channel: body.channel?.id || userId,
+				user: userId,
+				text: "sorry, you're not in the club :<",
+			});
+			return;
+		}
+
+		// Check if user is already in target channel
+		const targetMembers = await client.conversations.members({
+			channel: targetChannelId,
+		});
+
+		const isAlreadyInTarget = targetMembers.members?.includes(userId);
+
+		if (isAlreadyInTarget) {
+			await client.chat.postEphemeral({
+				channel: body.channel?.id || userId,
+				user: userId,
+				text: "you're already in <#C09C7L76UMP>!",
+			});
+			return;
+		}
+
+		// Add user to target channel
+		await client.conversations.invite({
+			channel: targetChannelId,
+			users: userId,
+		});
+
+		// await client.chat.postEphemeral({
+		// 	channel: body.channel?.id || userId,
+		// 	user: userId,
+		// 	text: "welcome!",
+		// });
+	} catch (error: any) {
+		console.error("Error in join_hq_channel workflow:", error);
+
+		// Handle specific error cases
+		let errorMessage = "sorry, something went wrong. plz let <@U07FCRNHS1J> know.\nerror code: ";
+
+		if (error?.data?.error === "channel_not_found") {
+			errorMessage += "guh?";
+		} else if (error?.data?.error === "user_not_found") {
+			errorMessage += "wuh?";
+		} else if (error?.data?.error === "not_in_channel") {
+			errorMessage += "buh?";
+		} else if (error?.data?.error === "cant_invite") {
+			errorMessage +=
+				"huh?";
+		}
+
+		await client.chat.postEphemeral({
+			channel: body.channel?.id || userId,
+			user: userId,
+			text: errorMessage,
+		});
+	}
+});
+
+// Handle App Home tab view
+app.event("app_home_opened", async ({ event, client }) => {
+	try {
+		await client.views.publish({
+			user_id: event.user,
+			view: {
+				type: "home",
+				blocks: [
+					{
+						type: "section",
+						text: {
+							type: "mrkdwn",
+							text: "wanna use #hq-cdn?",
+						},
+					},
+					getJoinHQWorkflowButton(),
+					{
+						type: "section",
+						text: {
+							type: "mrkdwn",
+							text: "(must be in #hq-hq)",
+						},
+					},
+				],
+			},
+		});
+	} catch (error) {
+		console.error("Error publishing home view:", error);
 	}
 });
 
