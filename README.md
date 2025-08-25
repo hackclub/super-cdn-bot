@@ -1,15 +1,5 @@
-# cdn-bot-private
+# super duper cdn bot
 
-To install dependencies:
+this is essentially a clone of the bot in #cdn on the hack club slack, but for any channel-- even private ones.
 
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.2.20. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+to use it, just add [@super duper cdn bot](https://hackclub.slack.com/team/U09BCT7EHDM) to any channel that you're the manager of, and it'll automatically reply to any future file uploads with a hack club CDN link
