@@ -114,6 +114,9 @@ app.event("member_joined_channel", async ({ event, client }) => {
 });
 
 app.message(async ({ message, say }) => {
+	// Ignore messages from channel G01QNNEUA10 (hq-hq)
+	if (message.channel === "G01QNNEUA10") return;
+	
 	if (!("files" in message) || !message.files?.length) return;
 
 	const currentFileIDs: string[] = []; // keep track of the file IDs we generate so we can remove them later
@@ -183,7 +186,7 @@ function getJoinHQWorkflowButton() {
 				type: "button",
 				text: {
 					type: "plain_text",
-					text: "Join HQ Channel",
+					text: "let me in",
 				},
 				action_id: "join_hq_channel",
 				style: "primary",
@@ -282,7 +285,7 @@ app.event("app_home_opened", async ({ event, client }) => {
 						type: "section",
 						text: {
 							type: "mrkdwn",
-							text: "wanna use #hq-cdn?",
+							text: "wanna use #​hq-cdn?",
 						},
 					},
 					getJoinHQWorkflowButton(),
