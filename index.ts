@@ -112,46 +112,70 @@ app.message(async ({ message, say }) => {
 		thread_ts: message.ts,
 	});
 
-	try {
-		const response = await ky
-			.post(process.env.CDN_URL, {
-				headers: {
-					Authorization: `Bearer ${process.env.CDN_API_KEY}`,
-					"Content-Type": "application/json",
-				},
-				json: proxyUrls,
-			})
-			.json<{
-				files: Array<{
-					deployedUrl: string;
-					file: string;
-					sha: string;
-					size: number;
-				}>;
-				cdnBase: string;
-			}>();
+	let retryCount = 0;
+	const maxRetries = 3;
+	
+	while (retryCount <= maxRetries) {
+		try {
+			const response = await ky
+				.post(process.env.CDN_URL, {
+					headers: {
+						Authorization: `Bearer ${process.env.CDN_API_KEY}`,
+						"Content-Type": "application/json",
+					},
+					json: proxyUrls,
+				})
+				.json<{
+					files: Array<{
+						deployedUrl: string;
+						file: string;
+						sha: string;
+						size: number;
+					}>;
+					cdnBase: string;
+				}>();
 
-		const fileList = response.files.map(file => file.deployedUrl).join("\n");
+			const fileList = response.files.map(file => file.deployedUrl).join("\n");
 
-		await app.client.chat.update({
-			token: process.env.SLACK_BOT_TOKEN,
-			channel: message.channel,
-			ts: loadingMessage.ts!,
-			text: `your files have been uploaded!\n${fileList}`,
-		});
-	} catch (error) {
-		await app.client.chat.update({
-			token: process.env.SLACK_BOT_TOKEN,
-			channel: message.channel,
-			ts: loadingMessage.ts!,
-			text: `sorry, something went wrong :(\n\`\`\`\n${error}\n\`\`\`\n\ndm <@U07FCRNHS1J> about it?`,
-		});
-	} finally {
-		// clean up the file URLs created on the proxy server
-		// for (const id of currentFileIDs) {
-		// 	fileProxies.delete(id);
-		// }
+			await app.client.chat.update({
+				token: process.env.SLACK_BOT_TOKEN,
+				channel: message.channel,
+				ts: loadingMessage.ts!,
+				text: `your files have been uploaded!\n${fileList}`,
+			});
+			break; // Success, exit the retry loop
+		} catch (error) {
+			const errorMessage = String(error);
+			const isSocketError = errorMessage.includes("socket connection was closed unexpectedly");
+			
+			if (isSocketError && retryCount < maxRetries) {
+				retryCount++;
+				await app.client.chat.update({
+					token: process.env.SLACK_BOT_TOKEN,
+					channel: message.channel,
+					ts: loadingMessage.ts!,
+					text: `:loading-tumbleweed: the cdn crapped out. retrying... (attempt ${retryCount + 1}/${maxRetries + 1})`,
+				});
+				// Wait a bit before retrying
+				await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+				continue;
+			}
+			
+			// If it's not a socket error or we've exceeded max retries, show the error
+			await app.client.chat.update({
+				token: process.env.SLACK_BOT_TOKEN,
+				channel: message.channel,
+				ts: loadingMessage.ts!,
+				text: `sorry, something went wrong :(\n\`\`\`\n${error}\n\`\`\`\n\ndm <@U07FCRNHS1J> about it?`,
+			});
+			break;
+		}
 	}
+	
+	// clean up the file URLs created on the proxy server
+	// for (const id of currentFileIDs) {
+	// 	fileProxies.delete(id);
+	// }
 });
 
 // Function to get the workflow button JSON (for use in bot description or workflows)
