@@ -124,6 +124,7 @@ app.message(async ({ message, say }) => {
 						"Content-Type": "application/json",
 					},
 					json: proxyUrls,
+					timeout: false,
 				})
 				.json<{
 					files: Array<{
